@@ -1,4 +1,4 @@
-# npde
+# Nonparametric Differential Equations (npde)
 
 This repository contains a Python implementation of npde - a nonparametric model for learning unknown differential equations. The paper we describe the model is on [arxiv](https://arxiv.org/abs/1807.05748). This repository also overrides the MATLAB implementation of npODE model for learning ordinary differential equations (the old MATLAB implementation is [here](https://github.com/cagatayyildiz/npode)).
 
