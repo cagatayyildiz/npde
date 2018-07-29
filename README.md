@@ -19,7 +19,7 @@ and sample from the learned model
 samples = npde.sample(Nw,x0,t) # Nw is the number of samples
 ```
 
-``npde.ipynb`` contains some more details, including three example fits where the underlying dynamics are governed by an ODE, SDE with constant diffusion, and SDE with state dependent diffusion. Below are ODE and constant diffusion fits:
+``demo.ipynb`` contains some more details, including three example fits where the underlying dynamics are governed by an ODE, SDE with constant diffusion, and SDE with state dependent diffusion. Below are ODE and constant diffusion fits:
 ![VDP](etc/drift_ode.png)
 ![VDP](etc/drift_sde.png)
 
