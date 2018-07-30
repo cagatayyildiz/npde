@@ -1,6 +1,12 @@
 # Nonparametric Differential Equations (npde)
 
-This repository contains a Python implementation of npde - a nonparametric model for learning unknown differential equations. The paper we describe the model is on [arxiv](https://arxiv.org/abs/1807.05748). This repository also overrides the MATLAB implementation of npODE model for learning ordinary differential equations (the old MATLAB implementation is [here](https://github.com/cagatayyildiz/npode)).
+This repository contains a Python implementation of npde - a nonparametric model for learning unknown differential equations. Two related papers are 
+
+ * [nonparametric stochastic differential equations](https://arxiv.org/abs/1807.05748)
+ * [nonparametric ordinary differential equations](https://arxiv.org/abs/1803.04303) - this repository overrides the [old MATLAB implementation](https://github.com/cagatayyildiz/npode) of ODE model.
+
+## Demo Notebook
+More details, figures and usage examples can be found in this [demo notebook](https://github.com/cagatayyildiz/npde/blob/master/demo.ipynb).
 
 ## Python Code
 The implementation is in Python3.5, and it requires [TensorFlow(1.6.0+)](https://www.tensorflow.org/) and [GPflow(1.1+)](https://github.com/GPflow/GPflow).
@@ -26,6 +32,9 @@ samples = npde.sample(Nw,x0,t) # Nw is the number of samples
 
 ### Example SDE Fit
 ![SDE](etc/sde.png)
+
+### SDE Samples
+![samples](etc/samples.png)
 
 The wrapper function ``npde_fit`` is where the parameters, kernel, and posterior are initialized, and also where optimization is performed - so perhaps a good starting point to read the code. This function takes the following as optional inputs:
  * ``sf``: drift signal variance
