@@ -110,7 +110,6 @@ def npde_fit(sess,t,Y,model='sde',sf0=1.0,ell0=[2,2],sfg0=1.0,ellg0=[1e5],
                   fix_sn=fix_sn)
         with tf.name_scope("cost"):
             Xs = npde.forward(Nw=Nw)
-            print(Xs[0].shape)
             ll = 0
             for i in range(len(Y)):
                 mvn = tf.contrib.distributions.MultivariateNormalFullCovariance(loc=Y[i],covariance_matrix=tf.diag(npde.sn))

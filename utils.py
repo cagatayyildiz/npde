@@ -77,7 +77,7 @@ def plot_model(npde,Nw=1):
     U = U.eval()
     D = Z.shape[1]
     if D == 2:
-        ts = np.linspace(np.min(t[0]),np.max(t[0])*3,len(t[0])*3)
+        ts = np.linspace(np.min(t[0]),np.max(t[0])*3,len(t[0])*12)
     else:
         ts = np.linspace(np.min(t[0]),np.max(t[0]),len(t[0])*10)
 
@@ -93,7 +93,7 @@ def plot_model(npde,Nw=1):
         plt.figure(1,figsize=(15,12))
         gs = GridSpec(4, 2)
         ax1 = plt.subplot(gs[0:4,0])
-        pathh, = ax1.plot(X[:,0],X[:,1],'.-',label='estimated path')
+        pathh, = ax1.plot(X[:,0],X[:,1],'-',label='estimated path')
         if npde.kern.ktype == "id":
             ilh = ax1.scatter(Z[:,0],Z[:,1],100, facecolors='none', edgecolors='k',label='inducing locations')
             ivh = ax1.quiver(Z[:,0],Z[:,1],U[:,0],U[:,1],units='height',width=0.006,color='k',label='inducing vectors')
@@ -115,9 +115,10 @@ def plot_model(npde,Nw=1):
             if d == 0:
                 ax.legend(handles=[trajh,vdph,dh],loc=1)
                 ax.set_title('Paths over Time',fontsize=15)
-        # plt.savefig('drift_ode.png', dpi=200)
+        plt.savefig('drift_ode.png', dpi=200)
         plt.show()
     elif npde.name is 'npsde':
+        ts = np.linspace(np.min(t[0]),np.max(t[0])*3,len(t[0])*3)
         X = npde.forward(Nw=Nw,ts=[ts]*len(Y))
         X = [x.eval() for x in X]
         plt.figure(1,figsize=(15,12))
@@ -134,6 +135,7 @@ def plot_model(npde,Nw=1):
         ax1.set_xlabel('$x_1$', fontsize=12)
         ax1.set_ylabel('$x_2$', fontsize=12)
         ax1.legend(handles=[pathh,ilh,ivh,dh],loc=2,fontsize='large')
+        ax1.set_title('Vector Field',fontsize=15)
         ts2 = np.linspace(np.min(ts),np.max(ts),len(ts)*3)
         true_vdp = em_int(vdp,lambda x,t:0,Y[0][0,:],ts2)
         for d in range(D):
@@ -146,7 +148,8 @@ def plot_model(npde,Nw=1):
             ax.set_ylabel('$x_{:d}$'.format(d+1), fontsize=12)
             if d==0:
                 ax.legend(handles=[pathh,vdph,datah],loc=1)
-        # plt.savefig('drift_sde.png', dpi=200)
+                ax.set_title('Paths over Time',fontsize=15)
+        plt.savefig('drift_sde.png', dpi=200)
         plt.show()
 
         plt.figure(2,figsize=(8,5))
