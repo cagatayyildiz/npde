@@ -3,7 +3,9 @@
 This repository contains a Python implementation of npde - a nonparametric model for learning unknown differential equations. Two related papers are 
 
  * [nonparametric stochastic differential equations](https://arxiv.org/abs/1807.05748)
- * [nonparametric ordinary differential equations](https://arxiv.org/abs/1803.04303) - this repository overrides the [old MATLAB implementation](https://github.com/cagatayyildiz/npode) of ODE model.
+ * [nonparametric ordinary differential equations](https://arxiv.org/abs/1803.04303) - 
+ 
+Also, this repository overrides the [MATLAB implementation](https://github.com/cagatayyildiz/npode) of our ODE model, which was published along with the paper.
 
 ## Demo Notebook
 More details, figures and usage examples can be found in this [demo notebook](https://github.com/cagatayyildiz/npde/blob/master/demo.ipynb).
