@@ -12,16 +12,32 @@ jitter0 = 1e-6
 
 
 class NPODE:
-    def __init__(self,x0,t,Y,Z0,U0,sn0,kern,learning_rate=0.01,jitter=jitter0,
+    def __init__(self,x0,t,Y,Z0,U0,sn0,kern,jitter=jitter0,
                  summ=False,whiten=True,fix_Z=False,fix_U=False,fix_sn=False):
-        '''
-        Z0 : numpy initializations for Z
-        U0 : numpy initializations for u
-        kern   : operator kernel for interpolation
-        '''
+        """ Constructor for the NPODE model
+        
+        Args:
+            x0: Numpy matrix of size TxD of initial values. T is the number of 
+                input sequences and D is the problem dimensionality.
+            t: Python array of T numpy vectors storing observation times
+            Y: Python array of T numpy matrices storing observations. Observations
+                 are stored in rows.
+            Z0: Numpy matrix of initial inducing points of size MxD, M being the
+                number of inducing points.
+            U0: Numpy matrix of initial inducing vectors of size MxD, M being the
+                number of inducing points.
+            sn0: Numpy vector of size 1xD for initial signal variance
+            kern: Kernel object for GP interpolation
+            jitter: Float of jitter level
+            whiten: Boolean. Currently we perform the optimization only in the 
+                white domain
+            summ: Boolean for Tensorflow summary
+            fix_Z: Boolean - whether inducing locations are fixed or optimized
+            fix_U: Boolean - whether inducing vectors are fixed or optimized
+            fix_sn: Boolean - whether noise variance is fixed or optimized
+        """
         self.name = 'npode'
         self.whiten = whiten
-        self.learning_rate = learning_rate
         self.kern = kern
         self.jitter = jitter
         with tf.name_scope("NPDE"):
@@ -49,6 +65,14 @@ class NPODE:
         self.integrator = ODERK4(self,x0,t)
 
     def f(self,X,t=[0]):
+        """ Implements GP interpolation to compute the value of the differential
+        function at location(s) X.
+        Args:
+            X: TxD tensor of input locations, T is the number of locations.
+        Returns:
+            TxD tensor of differential function (GP conditional) computed on 
+            input locations
+        """
         U = self.U
         Z = self.Z
         kern = self.kern
@@ -105,7 +129,14 @@ class NPODE:
         return self.integrator.forward(x0=x0,ts=ts)
 
     def predict(self,x0,t):
-        # returns (len(t), D)
+        """ Computes the integral and returns the path
+        Args:
+            x0: Python/numpy array of initial value
+            t: Python/numpy array of time points the integral is evaluated at
+            
+        Returns:
+            ODE solution computed at t, tensor of size [len(t),len(x0)]
+        """
         x0 = np.asarray(x0,dtype=np.float64).reshape((1,-1))
         t = [t]
         integrator = ODERK4(self,x0,t)
@@ -139,10 +170,33 @@ class NPODE:
 
 
 class NPSDE(NPODE):
-    def __init__(self,x0,t,Y,Z0,U0,sn0,kern,diffus,learning_rate=0.01,s=1,
-                 jitter=jitter0,summ=False,whiten=True,
-                 fix_Z=False,fix_U=False,fix_sn=False):
-        super().__init__(x0,t,Y,Z0,U0,sn0,kern,learning_rate=learning_rate,jitter=jitter,
+    def __init__(self,x0,t,Y,Z0,U0,sn0,kern,diffus,s=1,jitter=jitter0,
+                 summ=False,whiten=True,fix_Z=False,fix_U=False,fix_sn=False):
+        """ Constructor for the NPSDE model
+        
+        Args:
+            x0: Numpy matrix of size TxD of initial values. T is the number of 
+                input sequences and D is the problem dimensionality.
+            t: Python array of T numpy vectors storing observation times
+            Y: Python array of T numpy matrices storing observations. Observations
+                 are stored in rows.
+            Z0: Numpy matrix of initial inducing points of size MxD, M being the
+                number of inducing points.
+            U0: Numpy matrix of initial inducing vectors of size MxD, M being the
+                number of inducing points.
+            sn0: Numpy vector of size 1xD for initial signal variance
+            kern: Kernel object for GP interpolation
+            diffus: BrownianMotion object for diffusion GP interpolation
+            s: Integer parameterizing how denser the integration points are
+            jitter: Float of jitter level
+            summ: Boolean for Tensorflow summary
+            whiten: Boolean. Currently we perform the optimization only in the 
+                white domain
+            fix_Z: Boolean - whether inducing locations are fixed or optimized
+            fix_U: Boolean - whether inducing vectors are fixed or optimized
+            fix_sn: Boolean - whether noise variance is fixed or optimized
+        """
+        super().__init__(x0,t,Y,Z0,U0,sn0,kern,jitter=jitter,
                        summ=summ,whiten=whiten,fix_Z=fix_Z,fix_U=fix_U,fix_sn=fix_sn)
         self.name = 'npsde'
         self.diffus = diffus
@@ -160,6 +214,15 @@ class NPSDE(NPODE):
         return self.integrator.forward(Nw=Nw,x0=x0,ts=ts)
 
     def sample(self,Nw,x0,t):
+        """ Draws random samples from a learned SDE system
+        Args:
+            Nw: Integer number of samples
+            x0: Python/numpy array of initial value
+            t: Python/numpy array of time points the integral is evaluated at
+            
+        Returns:
+            Tensor of size [Nw,len(t),len(x0)] storing samples
+        """
         # returns (Nw, len(t), D)
         x0 = np.asarray(x0,dtype=np.float64).reshape((1,-1))
         t = [t]
@@ -172,23 +235,20 @@ class NPSDE(NPODE):
 
 
 class BrownianMotion:
-    def __init__(self,sf0,ell0,Z0,U0,whiten=False,eta=0.01,summ=False,
+    def __init__(self,sf0,ell0,Z0,U0,whiten=False,summ=False,
                  fix_ell=True,fix_sf=True,fix_Z=True,fix_U=True):
         with tf.name_scope('Brownian'):
             Zg = Param(Z0,
                        name = "Z",
-                       learning_rate = eta,
                        summ = False,
                        fixed = fix_Z)
             Ug = Param(U0,
                         name = "U",
-                        learning_rate = eta,
                         summ = False,
                         fixed = fix_U)
             self.kern = OperatorKernel(sf0=sf0,
                       ell0=ell0,
                       ktype="id",
-                      learning_rate=eta,
                       name='Kernel',
                       summ=summ,
                       fix_ell=fix_ell,

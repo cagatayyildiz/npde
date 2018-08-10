@@ -10,6 +10,8 @@ from abc import ABC, abstractmethod
 float_type = tf.float64
 
 class Integrator(ABC):
+    """ Base class for integrators
+    """
     def __init__(self,model,x0,t):
         self.model= model
         self.x0 = x0
@@ -29,6 +31,8 @@ class Integrator(ABC):
 
 
 class ODERK4(Integrator):
+    """ Runge-Kutta implementation for solving ODEs
+    """
     def __init__(self,model,x0,t):
         super().__init__(model,x0,t)
 
@@ -67,7 +71,7 @@ class ODERK4(Integrator):
 
 
 class SDEEM(Integrator):
-    """
+    """ Euler-Maruyama implementation for solving SDEs
     dx = f(x)*dt + g*sqrt(dt)
     """
     def __init__(self,model,x0,t,s=1):

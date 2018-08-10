@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib import rc
 
-import time
-
 float_type = tf.float64
 
 def vdp(x,t=0):
@@ -48,6 +46,9 @@ def gen_data(model='vdp',Ny=[30],tend=8,x0=np.asarray([2.0,-3.0]),nstd=0.1):
     return x0,t,Y,X,2,vdp,gtrue
 
 def em_int(f,g,x0,t):
+    """ Euler-Maruyama integration
+    
+    """
     ts = np.linspace(0,np.max(t),(len(t)-1)*5)
     ts = np.unique(np.sort(np.hstack((ts,t))))
     idx = np.where( np.isin(ts,t) )[0]

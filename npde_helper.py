@@ -12,6 +12,46 @@ def npde_fit(sess,t,Y,model='sde',sf0=1.0,ell0=[2,2],sfg0=1.0,ellg0=[1e5],
              fix_ell=False,fix_sf=False,fix_Z=False,fix_U=False,fix_sn=False,
              fix_ellg=False,fix_sfg=False,fix_Zg=True,fix_Ug=False,
              num_iter=500,print_int=10,eta=5e-3,dec_step=20,dec_rate=0.99,plot_=True):
+    """ Fits the NPDE model to a dataset and returns the fitted object
+    
+    Args:
+        sess: TensowFlow session needed for initialization and optimization
+        t: Python array of numpy vectors storing observation times
+        Y: Python array of numpy matrices storing observations. Observations
+             are stored in rows.
+        model: 'sde' or 'ode'
+        sf0: Integer initial value of the signal variance of drift GP
+        ell0: Python/numpy array of floats for the initial value of the 
+            lengthscale of drift GP
+        sfg0: Integer initial value of the signal variance of diffusion GP 
+        ellg0: Python/numpy array of a single float for the initial value of the 
+            lengthscale of diffusion GP
+        W: Integer denoting the width of the inducing point grid. If the problem
+            dimension is D, total number of inducing points is W**D
+        ktype: Kernel type. We have made experiments only with Kronecker kernel,
+            denoted by 'id'. The other kernels are not supported.
+        whiten: Boolean. Currently we perform the optimization only in the 
+            white domain
+        Nw: Integer number of samples used for optimization in SDE model
+        fix_ell: Boolean - whether drift GP lengthscale is fixed or optimized
+        fix_sf: Boolean - whether drift GP signal variance is fixed or optimized
+        fix_Z: Boolean - whether drift GP inducing locations are fixed or optimized
+        fix_U: Boolean - whether drift GP inducing vectors are fixed or optimized
+        fix_sn: Boolean - whether noise variance is fixed or optimized
+        fix_ellg: Boolean - whether diffusion GP lengthscale is fixed or optimized
+        fix_sfg: Boolean - whether diffusion GP signal variance is fixed or optimized
+        fix_Zg: Boolean - whether diffusion GP inducing locations are fixed or optimized
+        fix_Ug: Boolean - whether diffusion GP inducing vectors are fixed or optimized
+        num_iter: Integer number of optimization steps
+        num_iter: Integer interval of optimization logs to be printed
+        eta: Float step size used in optimization, must be carefully tuned
+        dec_step: Float decay interval of the step size
+        dec_rate: Float decay rate of the step size
+        plot_: Boolean for plotting the model fit. Valid only for demo
+        
+    Returns:
+        npde: Fitted model
+    """
 
     print('Model being initialized...')
     def init_U0(Y=None,t=None,kern=None,Z0=None,whiten=None):
@@ -22,7 +62,7 @@ def npde_fit(sess,t,Y,model='sde',sf0=1.0,ell0=[2,2],sfg0=1.0,ellg0=[1e5],
         if whiten:
             Lz = tf.cholesky(kern.K(Z0))
             U0 = tf.matrix_triangular_solve(Lz, U0, lower=True)
-        U0 = U0.eval()
+        U0 = sess.run(U0)
         return U0
 
     D = len(ell0)
