@@ -1,24 +1,23 @@
 import tensorflow as tf
 from gpflow import transforms
-from tensorflow import Variable
 float_type = tf.float64
 
-class Variable(Variable):
-    '''
-    extend tf.Variable to have properties : learning_rate
-    '''
-    pass
-
-    def set_learning_rate(self,value):
-        self._learning_rate = value
-
-    @property
-    def learning_rate(self):
-        if hasattr(self,'_learning_rate'):
-            return self._learning_rate
-
-        else:
-            return 0.001
+#class Variable(Variable):
+#    '''
+#    extend tf.Variable to have properties : learning_rate
+#    '''
+#    pass
+#
+#    def set_learning_rate(self,value):
+#        self._learning_rate = value
+#
+#    @property
+#    def learning_rate(self):
+#        if hasattr(self,'_learning_rate'):
+#            return self._learning_rate
+# 
+#        else:
+#            return 0.001
 
 class Param:
     '''
@@ -42,10 +41,11 @@ class Param:
         if self.fixed:
             self.tf_opt_var = tf.constant(self.value,name=name,dtype=float_type)
         else:
-            self.tf_opt_var = Variable(self.transform.backward(self.value),name=name,dtype=float_type)
+            # self.tf_opt_var = Variable(self.transform.backward(self.value),name=name,dtype=float_type)
+            self.tf_opt_var = tf.Variable(self.transform.backward(self.value),name=name,dtype=float_type)
 
-        if learning_rate is not None and not self.fixed:
-            self.tf_opt_var.set_learning_rate(learning_rate)
+#        if learning_rate is not None and not self.fixed:
+#            self.tf_opt_var.set_learning_rate(learning_rate)
 
         if summ:
             self.variable_summaries(self.tf_opt_var)
@@ -55,6 +55,9 @@ class Param:
             return self.tf_opt_var
         else:
             return self.transform.forward_tensor(self.tf_opt_var)
+
+    def __set__(self, instance, value):
+        self.tf_opt_var.assign(self.transform.backward(value))
 
     def variable_summaries(self,var):
         """Attach tensorBoard visualization"""
