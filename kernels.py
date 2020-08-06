@@ -24,6 +24,8 @@ class Kernel:
                               fixed = fix_ell)
         self.sf = sf()
         self.ell = ell()
+        self.fix_sf = fix_sf
+        self.fix_ell = fix_ell
 
     def square_dist(self,X,X2=None):
         X = X / self.ell

@@ -12,10 +12,8 @@ float_type = tf.float64
 class Integrator(ABC):
     """ Base class for integrators
     """
-    def __init__(self,model,x0,t):
+    def __init__(self,model):
         self.model= model
-        self.x0 = x0
-        self.t  = t
 
     @abstractmethod
     def forward(self):
@@ -33,14 +31,10 @@ class Integrator(ABC):
 class ODERK4(Integrator):
     """ Runge-Kutta implementation for solving ODEs
     """
-    def __init__(self,model,x0,t):
-        super().__init__(model,x0,t)
+    def __init__(self,model):
+        super().__init__(model)
 
-    def forward(self,x0=None,ts=None):
-        if ts is None:
-            ts = self.t
-        if x0 is None:
-            x0 = self.x0
+    def forward(self,x0,ts):
         Nt = x0.shape[0]
         Xs = np.zeros(Nt,dtype=np.object)
         for i in range(Nt):
@@ -74,15 +68,11 @@ class SDEEM(Integrator):
     """ Euler-Maruyama implementation for solving SDEs
     dx = f(x)*dt + g*sqrt(dt)
     """
-    def __init__(self,model,x0,t,s=1):
-        super().__init__(model,x0,t)
+    def __init__(self,model,s=1):
+        super().__init__(model)
         self.s = s
 
-    def forward(self,Nw=1,x0=None,ts=None):
-        if ts is None:
-            ts = self.t
-        if x0 is None:
-            x0 = self.x0
+    def forward(self,x0,ts,Nw=1):
         Xs = np.zeros(len(ts),dtype=np.object)
         for i in range(len(ts)):
             t = np.linspace(0,np.max(ts[i]),(len(ts[i])-1)*self.s+1)

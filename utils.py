@@ -66,9 +66,7 @@ def em_int(f,g,x0,t):
     return X
 
 
-def plot_model(npde,Nw=1):
-    t = npde.t
-    Y = npde.Y
+def plot_model(npde,t,Y,Nw=1):
     print(npde)
     Z = npde.Z.eval()
     U = npde.U
@@ -84,12 +82,12 @@ def plot_model(npde,Nw=1):
 
     vdpts = np.linspace(np.min(t[0]),np.max(t[0])*3,len(t[0])*10)
     g = lambda x,t: 0
-    true_path = em_int(vdp,g,npde.x0[0,:],vdpts)
-
+    true_path = em_int(vdp,g,Y[0][0],vdpts)
     rc('text', usetex=True)
 
+    x0 = np.vstack([Y_[0] for Y_ in Y])
     if npde.name is 'npode':
-        X = npde.forward(ts=[ts]*len(Y))
+        X = npde.forward(x0,[ts]*len(Y))
         X = X[0].eval()
         plt.figure(1,figsize=(15,12))
         gs = GridSpec(4, 2)
@@ -119,9 +117,10 @@ def plot_model(npde,Nw=1):
         plt.savefig('drift_ode.png', dpi=200)
         plt.show()
     elif npde.name is 'npsde':
-        ts = np.linspace(np.min(t[0]),np.max(t[0])*3,len(t[0])*3)
-        X = npde.forward(Nw=Nw,ts=[ts]*len(Y))
-        X = [x.eval() for x in X]
+        ts = np.linspace(np.min(t[0]),np.max(t[0])*3,len(t[0])*20)
+        X = npde.forward(x0,[ts]*len(Y),Nw=Nw)
+        X = [x.eval() for x in X] # list of (Nw,len(ts),d)
+        print([x.shape for x in X])
         plt.figure(1,figsize=(15,12))
         gs = GridSpec(4, 2)
         ax1 = plt.subplot(gs[0:4,0])

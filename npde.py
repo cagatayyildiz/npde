@@ -12,16 +12,11 @@ jitter0 = 1e-6
 
 
 class NPODE:
-    def __init__(self,x0,t,Y,Z0,U0,sn0,kern,jitter=jitter0,
+    def __init__(self,Z0,U0,sn0,kern,jitter=jitter0,
                  summ=False,whiten=True,fix_Z=False,fix_U=False,fix_sn=False):
         """ Constructor for the NPODE model
         
         Args:
-            x0: Numpy matrix of size TxD of initial values. T is the number of 
-                input sequences and D is the problem dimensionality.
-            t: Python array of T numpy vectors storing observation times
-            Y: Python array of T numpy matrices storing observations. Observations
-                 are stored in rows.
             Z0: Numpy matrix of initial inducing points of size MxD, M being the
                 number of inducing points.
             U0: Numpy matrix of initial inducing vectors of size MxD, M being the
@@ -59,10 +54,10 @@ class NPODE:
         self.U  = U()
         self.sn = sn()
         self.D  = U.shape[1]
-        self.x0 = x0
-        self.t  = t
-        self.Y  = Y
-        self.integrator = ODERK4(self,x0,t)
+        self.integrator = ODERK4(self)
+        self.fix_Z = fix_Z
+        self.fix_sn = fix_sn
+        self.fix_U = fix_U
 
     def f(self,X,t=[0]):
         """ Implements GP interpolation to compute the value of the differential
@@ -125,7 +120,7 @@ class NPODE:
             probs = tf.reduce_sum(mvn.log_prob(tf.squeeze(self.U)))
         return probs
 
-    def forward(self,x0=None,ts=None):
+    def forward(self,x0,ts):
         return self.integrator.forward(x0=x0,ts=ts)
 
     def predict(self,x0,t):
@@ -139,7 +134,7 @@ class NPODE:
         """
         x0 = np.asarray(x0,dtype=np.float64).reshape((1,-1))
         t = [t]
-        integrator = ODERK4(self,x0,t)
+        integrator = ODERK4(self)
         path = integrator.forward(x0,t)
         path = path[0]
         return path
@@ -170,16 +165,11 @@ class NPODE:
 
 
 class NPSDE(NPODE):
-    def __init__(self,x0,t,Y,Z0,U0,sn0,kern,diffus,s=1,jitter=jitter0,
+    def __init__(self,Z0,U0,sn0,kern,diffus,s=1,jitter=jitter0,
                  summ=False,whiten=True,fix_Z=False,fix_U=False,fix_sn=False):
         """ Constructor for the NPSDE model
         
         Args:
-            x0: Numpy matrix of size TxD of initial values. T is the number of 
-                input sequences and D is the problem dimensionality.
-            t: Python array of T numpy vectors storing observation times
-            Y: Python array of T numpy matrices storing observations. Observations
-                 are stored in rows.
             Z0: Numpy matrix of initial inducing points of size MxD, M being the
                 number of inducing points.
             U0: Numpy matrix of initial inducing vectors of size MxD, M being the
@@ -196,11 +186,11 @@ class NPSDE(NPODE):
             fix_U: Boolean - whether inducing vectors are fixed or optimized
             fix_sn: Boolean - whether noise variance is fixed or optimized
         """
-        super().__init__(x0,t,Y,Z0,U0,sn0,kern,jitter=jitter,
+        super().__init__(Z0,U0,sn0,kern,jitter=jitter,
                        summ=summ,whiten=whiten,fix_Z=fix_Z,fix_U=fix_U,fix_sn=fix_sn)
         self.name = 'npsde'
         self.diffus = diffus
-        self.integrator = SDEEM(self,x0,t,s)
+        self.integrator = SDEEM(self)
 
     def build_prior(self):
         pf = super().build_prior()
@@ -210,10 +200,10 @@ class NPSDE(NPODE):
     def g(self,ts,Nw=1):
         return self.diffus.g(ts=ts,Nw=Nw)
 
-    def forward(self,Nw=1,x0=None,ts=None):
-        return self.integrator.forward(Nw=Nw,x0=x0,ts=ts)
+    def forward(self,x0,ts,Nw=1):
+        return self.integrator.forward(x0=x0,ts=ts,Nw=Nw)
 
-    def sample(self,Nw,x0,t):
+    def sample(self,x0,t,Nw):
         """ Draws random samples from a learned SDE system
         Args:
             Nw: Integer number of samples
@@ -226,7 +216,7 @@ class NPSDE(NPODE):
         # returns (Nw, len(t), D)
         x0 = np.asarray(x0,dtype=np.float64).reshape((1,-1))
         t = [t]
-        path = self.integrator.forward(Nw,x0,t)
+        path = self.integrator.forward(x0,t,Nw)
         path = path[0]
         return path
 
@@ -236,7 +226,7 @@ class NPSDE(NPODE):
 
 class BrownianMotion:
     def __init__(self,sf0,ell0,Z0,U0,whiten=False,summ=False,
-                 fix_ell=True,fix_sf=True,fix_Z=True,fix_U=True):
+                 fix_ell=True,fix_sf=True,fix_Z=True,fix_U=False):
         with tf.name_scope('Brownian'):
             Zg = Param(Z0,
                        name = "Z",
@@ -257,6 +247,8 @@ class BrownianMotion:
         self.Ug  = Ug()
         self.jitter = 1e-6
         self.whiten = whiten
+        self.fix_Z = fix_Z
+        self.fix_U = fix_U
 
     def g(self,X,t):
         """ generates state dependent brownian motion
