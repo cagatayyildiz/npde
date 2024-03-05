@@ -11,7 +11,11 @@ Also, this repository overrides the [old MATLAB implementation](https://github.c
 More details, figures and usage examples can be found in this [demo notebook](https://github.com/cagatayyildiz/npde/blob/master/demo.ipynb).
 
 ### Python Code
-The implementation is in Python3.5, and it requires [TensorFlow(1.6.0+)](https://www.tensorflow.org/) and [GPflow(1.1+)](https://github.com/GPflow/GPflow).
+The implementation is in Python3.5, and it requires [TensorFlow(1.6.0+)](https://www.tensorflow.org/) and [GPflow(1.1+)](https://github.com/GPflow/GPflow). The dependencies can be installed via
+```shell
+# in a python3.5 installation
+pip install -r requirements.txt
+```
 
 Fitting our model on some data is as simple as follows:
 ```python
